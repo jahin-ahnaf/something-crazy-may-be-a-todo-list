@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sigma List</title>
+    <title>To Do App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
     <style>
         /* Custom CSS to fix the button alignment issue */
@@ -42,7 +42,7 @@
                 padding: 0 8px;
             }
             .task-item {
-                grid-template-columns: auto auto;
+                grid-template-columns: 1fr auto;
                 grid-row-gap: 8px;
             }
             .task-text {
@@ -57,8 +57,8 @@
     </style>
 </head>
 <body class="bg-gray-200">
-    <div class="container mx-auto mt-8 px-4" style="max-width: 600px;">
-        <h1 class="text-3xl text-center mb-4">:D Sigma List</h1>
+    <div class="container mx-auto mt-8 px-4 md:max-w-2xl">
+        <h1 class="text-3xl text-center mb-4">To Do App</h1>
         <div class="bg-white rounded-lg p-4 shadow-md">
             <div class="flex items-center mb-4">
                 <input type="text" id="taskInput" placeholder="Enter your task..." class="flex-grow py-2 px-3 border rounded-md mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
