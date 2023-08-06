@@ -7,13 +7,30 @@
 
     <style>
         /* Custom CSS to fix the button alignment issue */
+        
         .task-item {
             display: grid;
             grid-template-columns: 1fr auto auto;
             align-items: center;
+            padding: 8px; /* Added padding to the task item */
         }
         .task-text {
             flex: 1;
+            padding: 8px; /* Added padding to the task text */
+        }
+        .icon-add,
+        .icon-delete,
+        .icon-done {
+            border-radius: 5px;
+            padding: 8px; /* Added padding to the buttons */
+            padding-left: 10px;
+            padding-right: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .icon-add:hover,
+        .icon-delete:hover,
+        .icon-done:hover {
+            background-color: rgba(0, 0, 0, 0.1); /* Hover background color */
         }
         .alert {
             position: fixed;
@@ -108,7 +125,18 @@
                     doneIcon.classList.remove("text-red-500");
                     doneIcon.classList.add("text-green-500");
                 }
-                saveTasksToLocalStorage();
+
+                // Update the "done" state in localStorage
+                var tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+                var index = tasks.findIndex(function(task) {
+                    return task.text === taskText.innerHTML;
+                });
+                if (index !== -1) {
+                    tasks[index].done = taskText.classList.contains("line-through");
+                    localStorage.setItem("tasks", JSON.stringify(tasks));
+                } else {
+                    console.error("Task not found in localStorage");
+                }
             };
 
             li.appendChild(taskText);
@@ -124,8 +152,10 @@
             var taskList = document.getElementById("taskList");
             var tasks = [];
             for (var i = 0; i < taskList.children.length; i++) {
-                var taskText = taskList.children[i].querySelector(".task-text").innerHTML;
-                tasks.push(taskText);
+                var taskTextElement = taskList.children[i].querySelector(".task-text");
+                var taskText = taskTextElement.innerHTML;
+                var done = taskTextElement.classList.contains("line-through");
+                tasks.push({ text: taskText, done: done });
             }
             localStorage.setItem("tasks", JSON.stringify(tasks));
         }
@@ -133,13 +163,18 @@
         function loadTasksFromLocalStorage() {
             var taskList = document.getElementById("taskList");
             var tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-            tasks.forEach(function(taskText) {
+            tasks.forEach(function(task) {
                 var li = document.createElement("li");
                 li.className = "task-item"; // Apply the custom grid-based layout class
 
                 var taskTextElement = document.createElement("span");
-                taskTextElement.innerHTML = taskText;
+                taskTextElement.innerHTML = task.text;
                 taskTextElement.classList.add("task-text");
+
+                // Apply the strikethrough style if task is marked as done
+                if (task.done) {
+                    taskTextElement.classList.add("line-through");
+                }
 
                 var deleteIcon = document.createElement("span");
                 deleteIcon.className = "icon-delete text-red-500 cursor-pointer ml-2";
