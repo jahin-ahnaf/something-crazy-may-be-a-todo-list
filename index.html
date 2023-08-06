@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sigma List</title>
+    <title>To Do App</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
     <style>
         /* Custom CSS to fix the button alignment issue */
@@ -35,25 +35,6 @@
                 transform: translate(0, 0);
             }
         }
-
-        /* Responsive styles */
-        @media (max-width: 640px) {
-            .container {
-                padding: 0 8px;
-            }
-            .task-item {
-                grid-template-columns: auto auto;
-                grid-row-gap: 8px;
-            }
-            .task-text {
-                font-size: 16px;
-            }
-            .icon-add,
-            .icon-delete,
-            .icon-done {
-                font-size: 18px;
-            }
-        }
     </style>
 </head>
 <body class="bg-gray-200">
@@ -71,10 +52,117 @@
     <div id="alertBox" class="alert">Your input box is empty. Write something first.</div>
     <script>
         function addTask() {
-            // ... (rest of the addTask function as before)
+            var taskInput = document.getElementById("taskInput");
+            var taskList = document.getElementById("taskList");
+
+            if (!taskInput.checkValidity()) {
+                showAndHideAlert();
+                return; // If input is empty, return without adding a task
+            }
+
+            var li = document.createElement("li");
+            li.className = "task-item"; // Apply the custom grid-based layout class
+
+            var taskText = document.createElement("span"); // Create a span element for the task text
+            taskText.innerHTML = taskInput.value;
+            taskText.classList.add("task-text"); // Apply the task-text class to the span element
+
+            var deleteIcon = document.createElement("span");
+            deleteIcon.className = "icon-delete text-red-500 cursor-pointer ml-2";
+            deleteIcon.innerHTML = "&#xf1f8;";
+            deleteIcon.onclick = function () {
+                taskList.removeChild(li);
+                saveTasksToLocalStorage();
+            };
+
+            var doneIcon = document.createElement("span");
+            doneIcon.className = "icon-done text-green-500 cursor-pointer ml-2";
+            doneIcon.innerHTML = "&#xf00c;";
+            doneIcon.onclick = function () {
+                taskText.classList.toggle("line-through"); // Only apply the line-through style to the task text
+                if (doneIcon.classList.contains("text-green-500")) {
+                    doneIcon.classList.remove("text-green-500");
+                    doneIcon.classList.add("text-red-500");
+                } else {
+                    doneIcon.classList.remove("text-red-500");
+                    doneIcon.classList.add("text-green-500");
+                }
+                saveTasksToLocalStorage();
+            };
+
+            li.appendChild(taskText);
+            li.appendChild(deleteIcon);
+            li.appendChild(doneIcon);
+            taskList.appendChild(li);
+            taskInput.value = "";
+
+            saveTasksToLocalStorage();
         }
 
-        // ... (rest of the JavaScript code as before)
+        function saveTasksToLocalStorage() {
+            var taskList = document.getElementById("taskList");
+            var tasks = [];
+            for (var i = 0; i < taskList.children.length; i++) {
+                var taskText = taskList.children[i].querySelector(".task-text").innerHTML;
+                tasks.push(taskText);
+            }
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        function loadTasksFromLocalStorage() {
+            var taskList = document.getElementById("taskList");
+            var tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+            tasks.forEach(function(taskText) {
+                var li = document.createElement("li");
+                li.className = "task-item"; // Apply the custom grid-based layout class
+
+                var taskTextElement = document.createElement("span");
+                taskTextElement.innerHTML = taskText;
+                taskTextElement.classList.add("task-text");
+
+                var deleteIcon = document.createElement("span");
+                deleteIcon.className = "icon-delete text-red-500 cursor-pointer ml-2";
+                deleteIcon.innerHTML = "&#xf1f8;";
+                deleteIcon.onclick = function () {
+                    taskList.removeChild(li);
+                    saveTasksToLocalStorage();
+                };
+
+                var doneIcon = document.createElement("span");
+                doneIcon.className = "icon-done text-green-500 cursor-pointer ml-2";
+                doneIcon.innerHTML = "&#xf00c;";
+                doneIcon.onclick = function () {
+                    taskTextElement.classList.toggle("line-through");
+                    if (doneIcon.classList.contains("text-green-500")) {
+                        doneIcon.classList.remove("text-green-500");
+                        doneIcon.classList.add("text-red-500");
+                    } else {
+                        doneIcon.classList.remove("text-red-500");
+                        doneIcon.classList.add("text-green-500");
+                    }
+                    saveTasksToLocalStorage();
+                };
+
+                li.appendChild(taskTextElement);
+                li.appendChild(deleteIcon);
+                li.appendChild(doneIcon);
+                taskList.appendChild(li);
+            });
+        }
+
+        function showAndHideAlert() {
+            var alertBox = document.getElementById("alertBox");
+            alertBox.style.display = "block";
+
+            setTimeout(function() {
+                alertBox.style.display = "none";
+            }, 3000);
+        }
+
+        // Load tasks from localStorage on page load
+        window.addEventListener("load", function() {
+            loadTasksFromLocalStorage();
+        });
     </script>
 </body>
 </html>
