@@ -7,7 +7,6 @@
 
     <style>
         /* Custom CSS to fix the button alignment issue */
-        
         .task-item {
             display: grid;
             grid-template-columns: 1fr auto auto;
@@ -55,6 +54,65 @@
             }
         }
 
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 250px;
+            background-color: #f2f2f2;
+            padding: 20px;
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .workspace-list {
+            margin-bottom: 20px;
+        }
+        .workspace-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .workspace-item:hover {
+            background-color: #e0e0e0;
+        }
+        .delete-icon {
+            color: red;
+            cursor: pointer;
+            margin-right: 8px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .rename-icon {
+            color: blue;
+            cursor: pointer;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .add-workspace-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .add-workspace-btn:hover {
+            background-color: #0056b3;
+        }
+
         /* Responsive styles */
         @media (max-width: 640px) {
             .container {
@@ -76,6 +134,13 @@
     </style>
 </head>
 <body class="bg-gray-200">
+    <div class="sidebar">
+        <h2>Workspaces</h2>
+        <div class="workspace-list" id="workspaceList">
+            <!-- Workspaces will be dynamically added here -->
+        </div>
+        <button class="add-workspace-btn" onclick="createWorkspace()">New Workspace</button>
+    </div>
     <div class="container mx-auto mt-8 px-4 md:max-w-2xl">
         <h1 class="text-3xl text-center mb-4">To Do App</h1>
         <div class="bg-white rounded-lg p-4 shadow-md">
@@ -89,6 +154,9 @@
     </div>
     <div id="alertBox" class="alert">Your input box is empty. Write something first.</div>
     <script>
+        let currentWorkspaceIndex = 0;
+        const workspaces = JSON.parse(localStorage.getItem("workspaces")) || [{ name: "Default Workspace", tasks: [] }];
+        
         function addTask() {
             var taskInput = document.getElementById("taskInput");
             var taskList = document.getElementById("taskList");
@@ -125,18 +193,7 @@
                     doneIcon.classList.remove("text-red-500");
                     doneIcon.classList.add("text-green-500");
                 }
-
-                // Update the "done" state in localStorage
-                var tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-                var index = tasks.findIndex(function(task) {
-                    return task.text === taskText.innerHTML;
-                });
-                if (index !== -1) {
-                    tasks[index].done = taskText.classList.contains("line-through");
-                    localStorage.setItem("tasks", JSON.stringify(tasks));
-                } else {
-                    console.error("Task not found in localStorage");
-                }
+                saveTasksToLocalStorage();
             };
 
             li.appendChild(taskText);
@@ -157,24 +214,91 @@
                 var done = taskTextElement.classList.contains("line-through");
                 tasks.push({ text: taskText, done: done });
             }
-            localStorage.setItem("tasks", JSON.stringify(tasks));
+            workspaces[currentWorkspaceIndex].tasks = tasks;
+            localStorage.setItem("workspaces", JSON.stringify(workspaces));
         }
 
         function loadTasksFromLocalStorage() {
-            var taskList = document.getElementById("taskList");
-            var tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-            tasks.forEach(function(task) {
+            var tasks = JSON.parse(localStorage.getItem("workspaces")) || [];
+            workspaces.push(...tasks);
+        }
+
+        function showAndHideAlert() {
+            var alertBox = document.getElementById("alertBox");
+            alertBox.style.display = "block";
+
+            setTimeout(function() {
+                alertBox.style.display = "none";
+            }, 3000);
+        }
+
+        function createWorkspace() {
+            alert("This feature is under construction. Will be available soon. Stay tuned!");
+        }
+
+        function updateWorkspaceList() {
+            const workspaceList = document.getElementById("workspaceList");
+            workspaceList.innerHTML = "";
+
+            workspaces.forEach((workspace, index) => {
+                const workspaceItem = document.createElement("div");
+                workspaceItem.className = "workspace-item";
+                workspaceItem.textContent = workspace.name;
+
+                // Delete icon for removing workspace
+                const deleteIcon = document.createElement("span");
+                deleteIcon.className = "delete-icon";
+                deleteIcon.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteIcon.onclick = function () {
+                    if (index === currentWorkspaceIndex) {
+                        currentWorkspaceIndex = 0; // Switch to the default workspace if the current one is deleted
+                    }
+                    workspaces.splice(index, 1);
+                    updateWorkspaceList();
+                    updateTaskList();
+                };
+
+                // Rename icon for renaming workspace
+                const renameIcon = document.createElement("span");
+                renameIcon.className = "rename-icon";
+                renameIcon.innerHTML = '<i class="fas fa-edit"></i>';
+                renameIcon.onclick = function () {
+                    const newName = prompt("Enter the new workspace name:");
+                    if (newName !== null && newName.trim() !== "") {
+                        workspaces[index].name = newName;
+                        updateWorkspaceList();
+                        updateTaskList();
+                    }
+                };
+
+                workspaceItem.appendChild(deleteIcon);
+                workspaceItem.appendChild(renameIcon);
+                workspaceItem.onclick = function () {
+                    currentWorkspaceIndex = index;
+                    updateWorkspaceList();
+                    updateTaskList();
+                };
+
+                if (index === currentWorkspaceIndex) {
+                    workspaceItem.style.backgroundColor = "#007bff";
+                    workspaceItem.style.color = "white";
+                }
+
+                workspaceList.appendChild(workspaceItem);
+            });
+        }
+
+        function updateTaskList() {
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+
+            workspaces[currentWorkspaceIndex].tasks.forEach(function(task) {
                 var li = document.createElement("li");
                 li.className = "task-item"; // Apply the custom grid-based layout class
 
-                var taskTextElement = document.createElement("span");
-                taskTextElement.innerHTML = task.text;
-                taskTextElement.classList.add("task-text");
-
-                // Apply the strikethrough style if task is marked as done
-                if (task.done) {
-                    taskTextElement.classList.add("line-through");
-                }
+                var taskText = document.createElement("span"); // Create a span element for the task text
+                taskText.innerHTML = task.text;
+                taskText.classList.add("task-text"); // Apply the task-text class to the span element
 
                 var deleteIcon = document.createElement("span");
                 deleteIcon.className = "icon-delete text-red-500 cursor-pointer ml-2";
@@ -188,7 +312,7 @@
                 doneIcon.className = "icon-done text-green-500 cursor-pointer ml-2";
                 doneIcon.innerHTML = '<i class="fas fa-check"></i>';
                 doneIcon.onclick = function () {
-                    taskTextElement.classList.toggle("line-through");
+                    taskText.classList.toggle("line-through");
                     if (doneIcon.classList.contains("text-green-500")) {
                         doneIcon.classList.remove("text-green-500");
                         doneIcon.classList.add("text-red-500");
@@ -199,25 +323,28 @@
                     saveTasksToLocalStorage();
                 };
 
-                li.appendChild(taskTextElement);
+                li.appendChild(taskText);
                 li.appendChild(deleteIcon);
                 li.appendChild(doneIcon);
                 taskList.appendChild(li);
+
+                if (task.done) {
+                    taskText.classList.add("line-through");
+                    doneIcon.classList.remove("text-green-500");
+                    doneIcon.classList.add("text-red-500");
+                }
             });
         }
 
-        function showAndHideAlert() {
-            var alertBox = document.getElementById("alertBox");
-            alertBox.style.display = "block";
-
-            setTimeout(function() {
-                alertBox.style.display = "none";
-            }, 3000);
+        // Save workspaces to localStorage
+        function saveWorkspacesToLocalStorage() {
+            localStorage.setItem("workspaces", JSON.stringify(workspaces));
         }
 
-        // Load tasks from localStorage on page load
+        // Load tasks from localStorage and update the workspace list on page load
         window.addEventListener("load", function() {
-            loadTasksFromLocalStorage();
+            updateWorkspaceList();
+            updateTaskList();
         });
     </script>
 </body>
